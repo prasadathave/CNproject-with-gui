@@ -3,15 +3,16 @@ from client_func import *
 from functools import partial
 import socket
 from uifunctions import * 
-
+from threading import Thread
 
 
 
 # global client_socket
-
+global cntr
+cntr =1.0
 client_socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
 target_ip = "127.0.1.1"
-target_port = str(1234)
+target_port = input()
 client_socket.connect((target_ip,int(target_port)))
 print("Connected with server")
 
@@ -43,7 +44,7 @@ def maketweetscreen(username):
     root = Tk()
     screen = root
     root.title("Mini Tweet")
-    root.geometry("900x600")  
+    root.geometry("950x600")  
     # refresh1(root)
     frame1 = Frame(root)
     aa1 = partial(Actionspage,username,[])
@@ -91,7 +92,7 @@ def SearchPersonv(username):
     root = Tk()
     screen = root
     root.title("Mini Tweet")
-    root.geometry("900x600")  
+    root.geometry("950x600")  
     # refresh1(root)
     frame1 = Frame(root)
     frame = Frame(root)
@@ -140,7 +141,7 @@ def Unfollow1(username):
     root = Tk()
     screen = root
     root.title("Mini Tweet")
-    root.geometry("900x600")  
+    root.geometry("950x600")  
     # refresh1(root)
     frame1 = Frame(root)
     frame = Frame(root)
@@ -203,7 +204,7 @@ def searchbyhst1(username):
     root = Tk()
     screen = root
     root.title("Mini Tweet")
-    root.geometry("900x600")  
+    root.geometry("950x600")  
     # refresh1(root)
     frame1 = Frame(root)
     frame = Frame(root)
@@ -257,7 +258,7 @@ def follow1(username):
     root = Tk()
     screen = root
     root.title("Mini Tweet")
-    root.geometry("900x600")  
+    root.geometry("950x600")  
     # refresh1(root)
     frame1 = Frame(root)
     frame = Frame(root)
@@ -313,7 +314,7 @@ def Trendhst2(username):
     root = Tk()
     screen = root
     root.title("Mini Tweet")
-    root.geometry("900x600")  
+    root.geometry("950x600")  
     # refresh1(root)
     frame1 = Frame(root)
     frame = Frame(root)
@@ -379,7 +380,7 @@ def Showfollowers2(username):
     root = Tk()
     screen = root
     root.title("Mini Tweet")
-    root.geometry("900x600")  
+    root.geometry("950x600")  
     # refresh1(root)
     frame1 = Frame(root)
     frame = Frame(root)
@@ -393,20 +394,219 @@ def Showfollowers2(username):
     frame1.pack(side=TOP)
     # twt2 = Text(frame,height =2,width = 50)
   
-    tweet1 = partial(Showfollowers1,twt,username)
-    b1 = Button(frame,text="Search",command=tweet1)
+    # tweet1 = partial(Showfollowers1,twt,username)
+    # b1 = Button(frame,text="Search",command=tweet1)
+    a = ShowAllFollowers(client_socket)
+    if(a!=0 and a!=None):
+        arr =[]
+        arr.append("This is the list of followers")
+        for i in a:
+            if(i!="NULL"):
+                twt.insert(END,i+'\n')
+    else:
+        twt.insert(END,"There are no followers")
+    
+    frame.pack()
+    twt.pack()
+    # twt2.pack()
+    # b1.pack()
+    root.mainloop()
+
+
+#########################################
+
+#################Refresh####################
+# def refres1(twt,username):
+#     textt = twt.get(1.0,END)
+#     if(len(textt)==0):
+#         txt("Give some text")
+#     else:
+#         print(len(textt))
+#         a = Refresh(client_socket)
+#         if(a!=0 and a!=None):
+#             arr =[]
+#             arr.append("Here is the list of tweets in this hashtag")
+#             for i in a:
+#                 if(i!="NULL"):
+#                     arr.append(i)
+#             Actionspage(username,arr)
+#         else:
+#             txt("some error while searching or not found")
+
+    
+
+
+def refers2(username):
+    global screen
+    root = screen
+    root.destroy()
+    root = Tk()
+    screen = root
+    root.title("Mini Tweet")
+    root.geometry("950x600")  
+    # refresh1(root)
+    frame1 = Frame(root)
+    a = Refresh(client_socket)
+    if(a!=0 and a!=None):
+        arr =[]
+        # arr.append("Here is the list of tweets in this hashtag")
+        for i in a:
+            if(i!="NULL"):
+                arr.append(i)
+        Actionspage(username,arr)
+    else:
+        Actionspage(username,[])
+
+    frame1.pack()
+    
+    root.mainloop()
+
+#########################################
+
+##############Retweet####################
+def rtwt1(twt):
+    textt = twt.get(1.0,END)
+    # hasht = twt2.get(1.0,END)
+    
+    if(len(textt)==0):
+        txt("Give some text")
+    else:
+        print("Going to call retweet")
+        print(int(textt.strip()))
+        a = Retweet(client_socket,int(textt.strip()))
+        if(a!=0):
+            txt("retweeted successfully")
+        else:
+            txt("some error while tweeting")
+
+
+def rtwt2(username):
+    global screen
+    root = screen
+    root.destroy()
+    root = Tk()
+    screen = root
+    root.title("Mini Tweet")
+    root.geometry("950x600")  
+    # refresh1(root)
+    frame1 = Frame(root)
+    aa1 = partial(Actionspage,username,[])
+    Button(frame1,text="go to main window",command=aa1).pack()    
+    
+    frame1.pack(side=TOP)
+    frame = Frame(root)
+    twt = StringVar()
+    twt = Text(frame, height = 10, width = 50)
+    # twt2 = Text(frame,height =2,width = 50)
+    tweet1 = partial(rtwt1,twt)
+    b1 = Button(frame,text="Tweet",command=tweet1)
     
     frame.pack()
     twt.pack()
     # twt2.pack()
     b1.pack()
     root.mainloop()
-
-
 #########################################
 
+###########chatroom###############
 
 
+def senddata(client_socket,txt1,username):
+    global cntr
+    message = txt1.get(cntr,END)
+    if(str(message)=="exit"):
+        print("exiting")
+        # flag=1
+        # sys.stdout.write("Chat room exited\n") 
+        # sys.stdout.flush() 
+        cntr =0
+        Actionspage(username,[])
+        # break
+    client_socket.send(message.encode('ascii')) 
+    # sys.stdout.write("<You>") 
+    # sys.stdout.write(message+'\n') 
+    txt1.insert(END,"<You>:\n")
+    txt1.insert(END,message+"\n")
+    sys.stdout.flush() 
+
+
+def send1(myls,txtt):
+    data1 = txtt.get()
+    txtt.set("")
+    myls.insert(END,"<You>:"+data1)
+    client_socket.send(bytes(data1,"ascii"))
+    if data1=="exit":
+        client_socket.close()
+
+def receive(myls):
+    while True:
+        try:
+            data1 = client_socket.recv(BUFFERSIZE)
+            myls.insert(END, data1)     
+        except OSError:
+            break       
+
+
+
+
+
+
+
+
+
+def enchtrm(client_socket,username):
+    #notify server
+    abc = enterchatroom("EnterChatRoom")
+    dta = pickle.dumps(abc)
+    client_socket.send(dta)
+
+
+
+    global cntr
+    global screen
+    root = screen
+    root.destroy()
+    root = Tk()
+    screen = root
+    root.title("Chat room")
+    root.geometry("950x600")
+    frame1 = Frame(root)
+    mnscrn = partial(Actionspage,username,[])
+    Button(frame1,text="Go to main menu",command=mnscrn).pack()
+    frame1.pack(side=TOP)
+
+    frame = Frame(root)
+    Label(frame,text="").pack(side=TOP)
+    scroll = Scrollbar(frame,orient=VERTICAL)
+    myls = Listbox(frame,selectmode=EXTENDED,width=80,height=20,yscrollcommand=scroll.set,cursor="tcross")
+    #config scrollbar
+    scroll.config(command=myls.yview)
+    scroll.pack(side=RIGHT,fill=Y)
+    # myls.pack()
+    frame.pack(side=TOP)
+    myls.pack(pady=25,side=LEFT)
+
+    frame3 = Frame(root)
+    textt = StringVar()
+    textt_etry = Entry(frame3,textvariable=textt)
+    textt_etry.pack(side=TOP)
+
+
+    wrk = partial(send1,myls,textt)
+    b11 = Button(frame3,text="Send",command=wrk)
+    b11.pack(side=TOP)
+    frame3.pack(side=TOP)
+    # flag=0
+    # frame.pack()
+
+    
+    rcvtrd = Thread(target=receive,args=[myls])
+    rcvtrd.start()
+
+    root.mainloop()
+
+
+###################################
 
 
 
@@ -420,7 +620,7 @@ def Actionspage(username,arr):
 
     screen = root
     root.title("Main Screen")
-    root.geometry("900x600")
+    root.geometry("950x600")
     # refresh1(root)
     frame1 = Frame(root)
     frame = Frame(root)
@@ -436,8 +636,11 @@ def Actionspage(username,arr):
     Button(frame1,text="unfollow someone",command=unf1).pack(side=LEFT)
     sea1 = partial(searchbyhst1,username)
     Button(frame1,text="Search by Hastag",command=sea1).pack(side=LEFT)
-    Button(frame1,text="Go to chatroom").pack(side=LEFT)
-    Button(frame1,text="See own profile").pack(side=LEFT)
+
+    ctrm = partial(enchtrm,client_socket,username)
+    Button(frame1,text="Go to chatroom",command=ctrm).pack(side=LEFT)
+    rtwt = partial(rtwt2,username)
+    Button(frame1,text="Retweet",command=rtwt).pack(side=LEFT)
     frame1.pack(side=TOP)
     
     frame2 = Frame(root)
@@ -445,6 +648,8 @@ def Actionspage(username,arr):
     Button(frame2,text="Follow",command=flw).pack(side=LEFT)
     sflw = partial(Showfollowers2,username)
     Button(frame2,text="Show All followers",command=sflw).pack(side=LEFT)
+    rfrs = partial(refers2,username)
+    Button(frame2,text="Refresh",command=rfrs).pack(side=LEFT)
 
     frame2.pack(side=TOP)
     
@@ -641,7 +846,7 @@ def logverify(username,password):
 def lloginpage(frame):
     # screen1 = Tk()
     # screen1.title("Minitweeter Login")
-    # screen1.geometry("900x600")
+    # screen1.geometry("950x600")
     # Label(screen1,pady=25,text="Please Enter your details",width="300",height=2,font=("Calibri",15)).pack()
     # screen1.mainloop()
 
@@ -716,7 +921,7 @@ def main1(frame):
 def main():
     global screen
     screen = Tk()
-    screen.geometry("900x600")
+    screen.geometry("950x600")
     screen.title("Minitweeter")
     frame = LabelFrame(screen,text="",padx=2,pady=2)
 
@@ -736,9 +941,9 @@ def main():
     
     # Button(frame, text="With Args",height="2",width="30",command=fwith_args).pack()
     # Label(frame, text="").pack()
-    ak = partial(Actionspage,"prasad")
-    Button(frame,text="Actionpage",height=2,width=30,command=ak).pack()
-    Label(frame, text="").pack()
+    # ak = partial(Actionspage,"prasad")
+    # Button(frame,text="Actionpage",height=2,width=30,command=ak).pack()
+    # Label(frame, text="").pack()
 
 
     Button(frame, text="Quit",height="2",width="30",command=screen.destroy).pack()

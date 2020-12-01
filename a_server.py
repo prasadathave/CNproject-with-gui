@@ -75,14 +75,15 @@ def clientthread(conn, addr):
 					msg = conn.recv(BUFFERSIZE)
 				# print(msg)
 				data=pickle.loads(msg)
-				query = data.func
+				query = data.func.strip()
 				if(query=="NewTweet"):
 					NewTweet(conn,username, data)
 				elif(query == "DeleteFollower"):
 					print("deleting follower")
 					DeleteFollower(conn,addr,username,data)
-				elif(query == "ShowAllFollowes"):
-					ShowAllFollowers(conn, addr, username, data)
+				elif(query == "ShowAllFollowers"):
+					print("In the show followers")
+					ShowAllFollowers(conn,username, data)
 				elif(query == "SearchPerson"):
 					SearchPerson(conn, addr, username, data)
 				elif(query =="Follow"):
@@ -97,7 +98,8 @@ def clientthread(conn, addr):
 				elif(query == "Refresh"):
 					Refresh(conn, username, data)
 				elif(query == "Retweet"):
-						Retweet(conn,id,username)
+					print("Inside retweet")
+					Retweet(conn,data.id,username)
 				elif(query == "Logout"):
 					# Logout(conn, addr, username, data)
 					conn.send(bytes("bye"))

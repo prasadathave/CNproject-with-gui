@@ -78,34 +78,28 @@ def DeleteFollower(client_socket ,follower):
         print("Follower", follower, "unfollowed")#syntax check
     return data.flag
 
-def ShowAllFollowers(client_socket, username):
+def ShowAllFollowers(client_socket):
     arr=list()
     msg=showallfollowers("ShowAllFollowers",arr,0)
-    #client to server
     data=pickle.dumps(msg)
     client_socket.send(data)
     
     #server to client
-    print("test1")
     reply=client_socket.recv(BUFFERSIZE)
     while(len(reply)==0):
         reply=client_socket.recv(BUFFERSIZE) 
-    
-
     data=pickle.loads(reply)
-    print(data)
-    print("test2")
     names=data.arr #want the list in data to be stored in var names, check syntax
-    if data.flag==1:
-        if len(names)==0:
-            print("No followers")
-            return 0
-        else:
-            for name in names:
-                print(name)
-            return names
+    print("Got the value")
+    if len(names)==0:
+        print("No followers")
+        # return 0
     else:
-        return 0
+        arr = []
+        for name in names:
+            arr.append(name[0])
+            print(name[0])
+        return arr
 
 def Refresh(client_socket):
     #client to server
@@ -121,11 +115,12 @@ def Refresh(client_socket):
     data = pickle.loads(reply)
     if(data.count==0):
         print("No new Tweets")
+        return 0
     else:
         response = data.tweets
         for j in response:
             print(j)
-    return
+    return data.tweets
 
 def SearchPerson(client_socket, name):
     #client to server
@@ -220,7 +215,7 @@ def TrendingHashtags(client_socket):
     return result
 
 def EnterChatRoom(client_socket):
-
+    
     #notify server
     flag=0
     message = enterchatroom("EnterChatRoom")
@@ -258,7 +253,7 @@ def Retweet(client_socket, id):
     data=pickle.dumps(msg)
     client_socket.send(data)
 
-    #get the retweeted tweet and print it
+    #get confirmation of new tweet, this comes from newtweet function
     reply=client_socket.recv(BUFFERSIZE)
     while(len(reply)==0):
         reply=client_socket.recv(BUFFERSIZE) 
@@ -266,12 +261,19 @@ def Retweet(client_socket, id):
     if(data.flag==0):
         print("Could not Tweet, try again later")
     else:
-        print("Message",data.message)
-        for i in range(5):
+        #ready to take the new tweet
+        client_socket.send(bytes("1".encode('ascii')))
+        # #get the retweeted tweet and print it, this comes from retweet function
+        reply=client_socket.recv(BUFFERSIZE)
+        while(len(reply)==0):
+            reply=client_socket.recv(BUFFERSIZE) 
+        data=pickle.loads(reply)
+        print("Message:\n",data.message)
+        print("Hashtags:")
+        for i in range(len(data.hashtags)):
             if(data.hashtags[i]!="NULL"):
-                print(data.hashtags[i])
-    return
-    
+                print("#"+data.hashtags[i])
+    return data.flag
 
 
 

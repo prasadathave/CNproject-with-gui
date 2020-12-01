@@ -160,21 +160,20 @@ def DeleteFollower(conn, addr,username, data):
 	print("Deleted follower")
 
 def ShowAllFollowers(conn, username, data):
-	query="SELECT Username FROM "+str(username)+"_followers" 
-	#select all entries from Username column in the database of requesting user
+	print("searching for :",username.strip())
+	query="SELECT Username FROM " + str(username) + "_followers"
 	mycursor=mydb.cursor()
 	mycursor.execute(query)
-	print("executed")
+	print("query done")
 	arr=mycursor.fetchall()
-	print("Fetched")
 	print(arr)
-	if(len(arr)==0):    
+	if (len(arr)==0):
 		results=showallfollowers("",arr,0)
 		data=pickle.dumps(results)
 		conn.send(data)
-		print("Followers list sent")
+		print("data sent 0")
 	else:
-		results = showallfollowers("",arr,1)
+		results=showallfollowers("",arr,1)
 		data=pickle.dumps(results)
 		conn.send(data)
 		print("Followers list sent")
@@ -295,7 +294,7 @@ def EnterChatRoom(conn, addr, data, chatroom_clients, username):
 		while(len(message)==0):
 			message=conn.recv(2048)
 		# print("before if")
-		if message:
+		if len(message):
 			print ("<" + username + "> " + message.decode('ascii')) 
 			message_to_send = "<" + username + "> " + message.decode('ascii')
 			broadcast(message_to_send, conn, chatroom_clients) 
@@ -304,8 +303,19 @@ def EnterChatRoom(conn, addr, data, chatroom_clients, username):
 			print("Connection broken")
 			chatroom_clients.remove(conn)
 
+
+
+
+
+
+
+
+
+
+
+
 def Retweet(conn, id,username):
-	#get the tweet to be retweeted
+		#get the tweet to be retweeted
 	print(id)
 	print(type(id))
 	query="SELECT * FROM Tweets where TweetID=" +str(id)
@@ -320,8 +330,23 @@ def Retweet(conn, id,username):
 	mycursor.execute(query, val)
 	mydb.commit()
 	#update the message and make a new tweet (retweet) by you
-	msg=result[0][2]
-	msg="Retweet by"+str(username)+str(msg)
-	NewTweet(conn,username,msg)
+	hashtags=[]
+	for i in range(5):
+		hashtags.append(result[0][3+i])
+	message=result[0][2]
+	message="Retweet by "+str(username)+"\n"+str(message)
+	msg = newtweet("",message,hashtags,0)
+	#make a new tweet and notify client
+	tweet_id=NewTweet(conn,username,msg)
+
+	#send the new tweet to the client as a newtweet object, only after client is ready
+	client_reply=conn.recv(BUFFERSIZE)
+	while(len(client_reply)==0):
+		client_reply=conn.recv(BUFFERSIZE)
+	if(client_reply.decode('ascii')=="1"):
+		#now send
+		reply=newtweet("",message,hashtags,1)
+		data=pickle.dumps(reply)
+		conn.send(data)
 
 
