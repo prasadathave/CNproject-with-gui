@@ -24,11 +24,12 @@ class signup():
 
          
 class login:
-    def __init__(self,func,username, password,flag):
+    def __init__(self,func,username, password,tweets,flag):             #here
         self.func=func
         self.username = username
         self.password = password
         self.flag=flag
+        self.tweets=tweets                                              #here
     def send(self,conn):
         a = pickle.dumps(self)
         conn.send(a)
@@ -69,9 +70,10 @@ class deletefollower():
 
         
 class showallfollowers():
-    def __init__(self,func,arr):
+    def __init__(self,func,arr,flag):
         self.func=func
         self.arr=arr
+        self.flag = flag
     def send(self,conn):
         a = pickle.dumps(self)
         conn.send(a)
@@ -140,3 +142,12 @@ class trendinghashtags:
     def __init__(self, func, hashtags):
         self.func = func
         self.hashtags = hashtags
+
+class enterchatroom:
+    def __init__(self,func):
+        self.func=func
+
+class retweet:
+    def __init__(self,func,id):
+        self.func=func
+        self.id=id

@@ -1,4 +1,6 @@
 import pickle
+import sys
+import select
 from classes import *
 BUFFERSIZE = 6400
     
@@ -17,11 +19,11 @@ def SignUp(client_socket, username, password, email, name, age, gender, status, 
         print("Weak password")
     else:
         print("Signed up")
-    return
+    return data.flag
 
 def Login(client_socket, username, password):
     #client to server
-    credentials = login("Login",username, password,0)
+    credentials = login("Login",username, password,list(),0)            #here
     data = pickle.dumps(credentials)
     client_socket.send(data)
     
@@ -32,13 +34,17 @@ def Login(client_socket, username, password):
     data=pickle.loads(reply)
     if(data.flag==0):
         print("Login failed, invalid credentials")
+        return 0
     else:
         print("Login Succesful")
-    return data.flag
+        print("Recent tweets from your following")
+        for tweet in data.tweets:
+            print(tweet)
+    return data.tweets
     
-def NewTweet(client_socket, username):
-    tweet_msg = input("Enter New tweet: ")
-    hashtags = input("Provide the hashtags related to the above tweet (separated by space): ")
+def NewTweet(client_socket,tweet_msg,hashtags,username):
+    # tweet_msg = input("Enter New tweet: ")
+    # hashtags = input("Provide the hashtags related to the above tweet (separated by space): ")
     tags = list(hashtags.split())
     #client to server
     msg = newtweet("NewTweet",tweet_msg, tags,0)
@@ -54,7 +60,7 @@ def NewTweet(client_socket, username):
         print("Could not Tweet, try again later")
     else:
         print("Tweeted")
-    return
+    return data.flag
 
 
 def DeleteFollower(client_socket ,follower):
@@ -70,25 +76,36 @@ def DeleteFollower(client_socket ,follower):
     data=pickle.loads(reply)
     if(data.flag==1):
         print("Follower", follower, "unfollowed")#syntax check
+    return data.flag
 
 def ShowAllFollowers(client_socket, username):
     arr=list()
-    msg=showallfollowers("ShowAllFollowers",arr)
+    msg=showallfollowers("ShowAllFollowers",arr,0)
     #client to server
     data=pickle.dumps(msg)
     client_socket.send(data)
     
     #server to client
+    print("test1")
     reply=client_socket.recv(BUFFERSIZE)
     while(len(reply)==0):
         reply=client_socket.recv(BUFFERSIZE) 
+    
+
     data=pickle.loads(reply)
+    print(data)
+    print("test2")
     names=data.arr #want the list in data to be stored in var names, check syntax
-    if len(names)==0:
-        print("No followers")
+    if data.flag==1:
+        if len(names)==0:
+            print("No followers")
+            return 0
+        else:
+            for name in names:
+                print(name)
+            return names
     else:
-        for name in names:
-            print(name)
+        return 0
 
 def Refresh(client_socket):
     #client to server
@@ -101,13 +118,14 @@ def Refresh(client_socket):
     reply=client_socket.recv(BUFFERSIZE)
     while(len(reply)==0):
         reply=client_socket.recv(BUFFERSIZE) 
-    data=pickle.loads(reply)
+    data = pickle.loads(reply)
     if(data.count==0):
         print("No new Tweets")
     else:
-        pass
-        #print whatever we want from data
-    
+        response = data.tweets
+        for j in response:
+            print(j)
+    return
 
 def SearchPerson(client_socket, name):
     #client to server
@@ -128,8 +146,11 @@ def SearchPerson(client_socket, name):
         print("Status: ",data.status)
         print("City: ",data.city)
         print("Education: ",data.institute)
+        return data
     else:
+        
         print("No such user")
+        return 0
 
 def Follow(client_socket,username):
     #check if username to be followed exists
@@ -145,6 +166,7 @@ def Follow(client_socket,username):
         print("Invalid name/username")
     else:
         print("Following ",username)
+    return data.flag
 
 def SearchByHashtag(client_socket, hashtag):
     #client to server
@@ -160,6 +182,7 @@ def SearchByHashtag(client_socket, hashtag):
     data = pickle.loads(reply)
     if(len(data.tweets)==0):
         print("No tweets with this hashtag")
+        return 0
     else:
         for tweet in data.tweets:
             print("Tweet done by: ")
@@ -174,7 +197,10 @@ def SearchByHashtag(client_socket, hashtag):
                     print(tweet[j])
                 else:
                     break
+            
             print("\n")
+        return data.tweets
+
 
 def TrendingHashtags(client_socket):
     #client to server
@@ -191,6 +217,63 @@ def TrendingHashtags(client_socket):
     print("Following are the top 5 trending hashtags")
     for j in result:
         print(j)
+    return result
+
+def EnterChatRoom(client_socket):
+
+    #notify server
+    flag=0
+    message = enterchatroom("EnterChatRoom")
+    data = pickle.dumps(message)
+    client_socket.send(data)
+
+    while True: 
+        sockets_list = [sys.stdin, client_socket] 
+        read_sockets,write_socket, error_socket = select.select(sockets_list,[],[]) 
+
+        for socks in read_sockets: 
+            if socks == client_socket: 
+                message = socks.recv(2048) 
+                print (message.decode('ascii')) 
+            else: 
+                message = sys.stdin.readline().strip()
+                if(str(message)=="exit"):
+                    print("exiting")
+                    flag=1
+                    break
+                client_socket.send(message.encode('ascii')) 
+                sys.stdout.write("<You>\n") 
+                sys.stdout.write(message+'\n') 
+                sys.stdout.flush() 
+                
+
+        if flag==1:
+            break
+    sys.stdout.write("Chat room exited\n") 
+    sys.stdout.flush() 
+
+def Retweet(client_socket, id):
+    #ask server to update database
+    msg=retweet("Retweet",id)
+    data=pickle.dumps(msg)
+    client_socket.send(data)
+
+    #get the retweeted tweet and print it
+    reply=client_socket.recv(BUFFERSIZE)
+    while(len(reply)==0):
+        reply=client_socket.recv(BUFFERSIZE) 
+    data=pickle.loads(reply)
+    if(data.flag==0):
+        print("Could not Tweet, try again later")
+    else:
+        print("Message",data.message)
+        for i in range(5):
+            if(data.hashtags[i]!="NULL"):
+                print(data.hashtags[i])
+    return
+    
+
+
 
 def LogOut():
     pass

@@ -1,85 +1,515 @@
 from tkinter import *
 from client_func import *
 from functools import partial
-import time
+import socket
+from uifunctions import * 
+
+
+
+
+# global client_socket
+
+client_socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+target_ip = "127.0.1.1"
+target_port = str(1234)
+client_socket.connect((target_ip,int(target_port)))
+print("Connected with server")
+
 def callback(sv,len1):
     c = sv.get()[0:len1]
     # print("c=" , c)
     sv.set(c)
 
-def Actionspage():
-        root = screen
-        root.destroy()
-        root = Tk()
-        root.title("fbwjkef")
-        root.geometry("900x600")
-        
-        frame1 = Frame(root)
-        Button(frame1,text="Hello").pack(side=LEFT)
-        Button(frame1,text="NewTweet").pack(side=LEFT)
-        Button(frame1,text="See Top trending").pack(side=LEFT)
-        Button(frame1,text="Search a person").pack(side=LEFT)
-        Button(frame1,text="unfollow someone").pack(side=LEFT)
-        Button(frame1,text="Search Hastag").pack(side=LEFT)
-        Button(frame1,text="Go to chat").pack(side=LEFT)
-        Button(frame1,text="Log out",command=root.destroy).pack(side=LEFT)
-        frame1.pack(side=TOP)
-
-        frame = Frame(root)
-        Label(frame,text="").pack(side=TOP)
+#######tweeting#######################################
+def maketwt(twt,twt2,username):
+    textt = twt.get(1.0,END)
+    hasht = twt2.get(1.0,END)
+    print(hasht)
+    if(len(textt)==0):
+        txt("Give some text")
+    else:
+        print(len(textt))
+        a = NewTweet(client_socket,textt,hasht,username)
+        if(a!=0):
+            txt("tweeted successfully")
+        else:
+            txt("some error while tweeting")
 
 
-        scroll = Scrollbar(frame,orient=VERTICAL)
+def maketweetscreen(username):
+    global screen
+    root = screen
+    root.destroy()
+    root = Tk()
+    screen = root
+    root.title("Mini Tweet")
+    root.geometry("900x600")  
+    # refresh1(root)
+    frame1 = Frame(root)
+    aa1 = partial(Actionspage,username,[])
+    Button(frame1,text="go to main window",command=aa1).pack()    
+    
+    frame1.pack(side=TOP)
+
+
+    frame = Frame(root)
+    twt = StringVar()
+    twt = Text(frame, height = 10, width = 50)
+
+    twt2 = Text(frame,height =2,width = 50)
+  
+    tweet1 = partial(maketwt,twt,twt2,username)
+    b1 = Button(frame,text="Tweet",command=tweet1)
+    
+    frame.pack()
+    twt.pack()
+    twt2.pack()
+    b1.pack()
+    root.mainloop()
+
+###########################################
+
+##### Searching a person ####################################
+
+def srcAux(twt):
+    textt = twt.get(1.0,END)
+    if(len(textt)==0):
+        txt("Give some text")
+    else:
+        print(len(textt))
+        a = SearchPerson(client_socket,textt.strip())
+        if(a!=0 and a!=None):
+            txt("Person is found and email is :"+a.name + "\nHis/her username is :" + a.username+"\nHis/her age,gender,city,education is as follows:"+str(a.age)+","+a.gender+","+a.city+","+a.institute)
+        else:
+            txt("some error while searching or not found")
+    
+
+def SearchPersonv(username):
+    global screen
+    root = screen
+    root.destroy()
+    root = Tk()
+    screen = root
+    root.title("Mini Tweet")
+    root.geometry("900x600")  
+    # refresh1(root)
+    frame1 = Frame(root)
+    frame = Frame(root)
+    twt = StringVar()
+    twt = Text(frame, height = 10, width = 50)
+
+    # search11 = partial(srcAux,twt)
+    # Button(frame1,text="Search a person",command = search11).pack(side=LEFT)
+    aa1 = partial(Actionspage,username,[])
+    Button(frame1,text="go to main window",command=aa1).pack()
+    frame1.pack(side=TOP)
 
 
 
-        myls = Listbox(frame,selectmode=EXTENDED,width=80,height=20,yscrollcommand=scroll.set)
+    # twt2 = Text(frame,height =2,width = 50)
+  
+    tweet1 = partial(srcAux,twt)
+    b1 = Button(frame,text="Search",command=tweet1)
+    
+    frame.pack()
+    twt.pack()
+    # twt2.pack()
+    b1.pack()
+    root.mainloop()
 
-        #config scrollbar
+    
+######### Unfollow someone #########
+def Unfollow2(twt,username):
+    textt = twt.get(1.0,END)
+    if(len(textt)==0):
+        txt("Give some text")
+    else:
+        print(len(textt))
+        a = DeleteFollower(client_socket,textt.strip())
+        if(a!=0 and a!=None):
+            txt("Deleted Successfully")
 
-        scroll.config(command=myls.yview)
-        scroll.pack(side=RIGHT,fill=Y)
-
-        # myls.pack()
-        frame.pack()
+        else:
+            txt("some error while searching or not found")
 
 
-        myls.pack(pady=25,side=LEFT)
-        def delete_list(myls):
-                print(ANCHOR)
-                print(type(ANCHOR))
-                myls.delete(ANCHOR)
+def Unfollow1(username):
+    global screen
+    root = screen
+    root.destroy()
+    root = Tk()
+    screen = root
+    root.title("Mini Tweet")
+    root.geometry("900x600")  
+    # refresh1(root)
+    frame1 = Frame(root)
+    frame = Frame(root)
+    twt = StringVar()
+    twt = Text(frame, height = 10, width = 50)
 
-        arr = ["one","two","three","one","two","three","one","two","three","one","two","three","one","two","three","one","two","three","one","two","three","one","two","three","one","two","three","one","two","three","one","two","three","one","two","three","one","two","three","one","two","three","one","two","three"]
-        myls.insert(END,"Item")
-        myls.insert(END,"Item")
-        myls.insert(END,"Item")
+    # search11 = partial(srcAux,twt)
+    # Button(frame1,text="Search a person",command = search11).pack(side=LEFT)
+    aa1 = partial(Actionspage,username,[])
+    Button(frame1,text="go to main window",command=aa1).pack()
+    frame1.pack(side=TOP)
 
+
+
+    # twt2 = Text(frame,height =2,width = 50)
+  
+    tweet1 = partial(Unfollow2,twt,username.strip())
+    b1 = Button(frame,text="Search",command=tweet1)
+    
+    frame.pack()
+    twt.pack()
+    # twt2.pack()
+    b1.pack()
+    root.mainloop()
+
+####################################################################
+
+
+
+
+    
+    
+
+
+############Search by Hashtag #########
+def searchbyhst(twt,username):
+    textt = twt.get(1.0,END)
+    if(len(textt)==0):
+        txt("Give some text")
+    else:
+        print(len(textt))
+        a = SearchByHashtag(client_socket,textt.strip())
+        if(a!=0 and a!=None):
+            arr =[]
+            arr.append("Here is the list of tweets in this hashtag")
+            for i in a:
+                if(i!="NULL"):
+                    arr.append(i)
+            Actionspage(username,arr)
+        else:
+            txt("some error while searching or not found")
+
+    
+
+
+def searchbyhst1(username):
+    global screen
+    root = screen
+    root.destroy()
+    root = Tk()
+    screen = root
+    root.title("Mini Tweet")
+    root.geometry("900x600")  
+    # refresh1(root)
+    frame1 = Frame(root)
+    frame = Frame(root)
+    twt = StringVar()
+    twt = Text(frame, height = 10, width = 50)
+
+    # search11 = partial(srcAux,twt)
+    # Button(frame1,text="Search a person",command = search11).pack(side=LEFT)
+    aa1 = partial(Actionspage,username,[])
+    Button(frame1,text="go to main window",command=aa1).pack()
+    frame1.pack(side=TOP)
+
+
+
+    # twt2 = Text(frame,height =2,width = 50)
+  
+    tweet1 = partial(searchbyhst,twt,username)
+    b1 = Button(frame,text="Search",command=tweet1)
+    
+    frame.pack()
+    twt.pack()
+    # twt2.pack()
+    b1.pack()
+    root.mainloop()
+
+
+######Go to chatroom ###########
+
+#########################
+
+################ Follow someone ##########
+def follow2(twt,username):
+    textt = twt.get(1.0,END)
+    if(len(textt)==0):
+        txt("Give some text")
+    else:
+        print(len(textt))
+        a = Follow(client_socket,textt.strip())
+        if(a!=0 and a!=None):
+            txt("followed "+textt + "Successfully")
+        else:
+            txt("some error while searching or not found")
+
+    
+
+
+def follow1(username):
+    global screen
+    root = screen
+    root.destroy()
+    root = Tk()
+    screen = root
+    root.title("Mini Tweet")
+    root.geometry("900x600")  
+    # refresh1(root)
+    frame1 = Frame(root)
+    frame = Frame(root)
+    twt = StringVar()
+    twt = Text(frame, height = 10, width = 50)
+
+    # search11 = partial(srcAux,twt)
+    # Button(frame1,text="Search a person",command = search11).pack(side=LEFT)
+    aa1 = partial(Actionspage,username,[])
+    Button(frame1,text="go to main window",command=aa1).pack()
+    frame1.pack(side=TOP)
+
+
+
+    # twt2 = Text(frame,height =2,width = 50)
+  
+    tweet1 = partial(follow2,twt,username)
+    b1 = Button(frame,text="Follow",command=tweet1)
+    
+    frame.pack()
+    twt.pack()
+    # twt2.pack()
+    b1.pack()
+    root.mainloop()
+##################################
+#######Trending Hashtags ###########
+# def Trendhst1(twt,username):
+#     textt = twt.get(1.0,END)
+#     if(len(textt)==0):
+#         txt("Give some text")
+#     else:
+#         print(len(textt))
+#         a = TrendingHashtags(client_socket)
+#         if(a!=0 and a!=None):
+#             arr =[]
+#             arr.append("These are the trending Hashtags")
+#             for i in a:
+#                 if(i!="NULL"):
+#                     arr.append(i)
+#             # Actionspage(username,arr)
+#             for i in arr:
+#                 twt.insert(END, i+"\n")
+#         else:
+#             txt("some error while searching or not found")
+
+    
+
+
+def Trendhst2(username):
+    global screen
+    root = screen
+    root.destroy()
+    root = Tk()
+    screen = root
+    root.title("Mini Tweet")
+    root.geometry("900x600")  
+    # refresh1(root)
+    frame1 = Frame(root)
+    frame = Frame(root)
+    twt = StringVar()
+    twt = Text(frame, height = 10, width = 50)
+
+    # search11 = partial(srcAux,twt)
+    # Button(frame1,text="Search a person",command = search11).pack(side=LEFT)
+    aa1 = partial(Actionspage,username,[])
+    Button(frame1,text="go to main window",command=aa1).pack()
+    frame1.pack(side=TOP)
+
+
+
+    # twt2 = Text(frame,height =2,width = 50)
+  
+    # tweet1 = partial(Trendhst1,twt,username)
+    # b1 = Button(frame,text="Search",command=tweet1)
+
+    a1 = TrendingHashtags(client_socket)
+    if(len(a1)==0):
+        txt("Error in fetching or no activity yet")
+    else:
+        for i in a1:
+            twt.insert(END,i+"\n")
+    
+    frame.pack()
+    twt.pack()
+    # twt2.pack()
+    # b1.pack()
+    root.mainloop()
+######################################
+
+
+
+
+######### Show all followers ############
+def Showfollowers1(twt,username):
+    textt = twt.get(1.0,END)
+    if(len(textt)==0):
+        txt("Give some text")
+    else:
+        print(len(textt))
+        a = ShowAllFollowers(client_socket,textt.strip())
+        if(a!=0 and a!=None):
+            arr =[]
+            arr.append("This is the list of followers")
+            for i in a:
+                if(i!="NULL"):
+                    twt.insert(END,i+'\n')
+            
+            # Actionspage(username,arr)
+        else:
+            txt("some error while searching or not found")
+
+    
+
+
+def Showfollowers2(username):
+    global screen
+    root = screen
+    root.destroy()
+    root = Tk()
+    screen = root
+    root.title("Mini Tweet")
+    root.geometry("900x600")  
+    # refresh1(root)
+    frame1 = Frame(root)
+    frame = Frame(root)
+    twt = StringVar()
+    twt = Text(frame, height = 10, width = 50)
+
+    # search11 = partial(srcAux,twt)
+    # Button(frame1,text="Search a person",command = search11).pack(side=LEFT)
+    aa1 = partial(Actionspage,username,[])
+    Button(frame1,text="go to main window",command=aa1).pack()
+    frame1.pack(side=TOP)
+    # twt2 = Text(frame,height =2,width = 50)
+  
+    tweet1 = partial(Showfollowers1,twt,username)
+    b1 = Button(frame,text="Search",command=tweet1)
+    
+    frame.pack()
+    twt.pack()
+    # twt2.pack()
+    b1.pack()
+    root.mainloop()
+
+
+#########################################
+
+
+
+
+
+
+
+
+def Actionspage(username,arr):
+    global screen
+    root = screen
+    root.destroy()
+    root = Tk()
+
+    screen = root
+    root.title("Main Screen")
+    root.geometry("900x600")
+    # refresh1(root)
+    frame1 = Frame(root)
+    frame = Frame(root)
+    nt = partial(maketweetscreen,username)
+    Button(frame1,text="NewTweet",command=nt).pack(side=LEFT)
+
+    thst = partial(Trendhst2,username)
+    Button(frame1,text="Trending Hashtags",command=thst).pack(side=LEFT)
+    aa = partial(SearchPersonv,username)
+    Button(frame1,text="Search a person",command = aa).pack(side=LEFT)
+
+    unf1 = partial(Unfollow1,username)
+    Button(frame1,text="unfollow someone",command=unf1).pack(side=LEFT)
+    sea1 = partial(searchbyhst1,username)
+    Button(frame1,text="Search by Hastag",command=sea1).pack(side=LEFT)
+    Button(frame1,text="Go to chatroom").pack(side=LEFT)
+    Button(frame1,text="See own profile").pack(side=LEFT)
+    frame1.pack(side=TOP)
+    
+    frame2 = Frame(root)
+    flw = partial(follow1,username)
+    Button(frame2,text="Follow",command=flw).pack(side=LEFT)
+    sflw = partial(Showfollowers2,username)
+    Button(frame2,text="Show All followers",command=sflw).pack(side=LEFT)
+
+    frame2.pack(side=TOP)
+    
+    Label(frame,text="").pack(side=TOP)
+    scroll = Scrollbar(frame,orient=VERTICAL)
+    myls = Listbox(frame,selectmode=EXTENDED,width=80,height=20,yscrollcommand=scroll.set,cursor="tcross")
+    #config scrollbar
+    scroll.config(command=myls.yview)
+    scroll.pack(side=RIGHT,fill=Y)
+    # myls.pack()
+    frame.pack()
+    myls.pack(pady=25,side=LEFT)
+    
+    # arr = Refresh(client_socket)
+
+    # myls.insert(END,"Item")
+    # myls.insert(END,"Item")
+    # myls.insert(END,"Item")
+    if(len(arr)!=0):
         for i in arr:
-                myls.insert(END,i)
-
-
-        #add items
-        frame2 = Frame(root)
-
-        frame2.pack()
-        root.mainloop()
+            myls.insert(END,i)
+    #add items
+    frame2 = Frame(root)
+    frame2.pack()
+    root.mainloop()
 
 
 
 
-def txt(frame,name):
+
+def main2():
+    pass
+
+
+def txt(name):
     # tt1 = Label(screen,text="name is :"+name.get())
     tt1 = Tk()
     tt1.wm_title("!")
-    label = Label(tt1,text = "Username entered is "+name.get(),font=("Calibri,15"))
+    label = Label(tt1,text = name,font=("Calibri,15"))
     label.pack()
     B1 = Button(tt1,text="Okay",command=tt1.destroy)
     B1.pack()
 
     tt1.mainloop()
+    # screen.destroy()
+    #usrname, password.strip(), eml, na1, ag, gend, stat, ci, ins
 
 
+
+def rregister(client_socket, username, password, email, name, age, gender, status, city, institute):
+    usrname = username.get().strip()
+    pswd = password.get().strip()
+    eml = email.get().strip()
+    na1 = name.get().strip()
+    ag = age.get()
+    gend =gender.get().strip()
+    stat = status.get().strip()
+    ci = city.get().strip()
+    ins = institute.get().strip()
+    print(usrname, password.get().strip(), eml, na1, ag, gend, stat, ci, ins)
+    flg = SignUp(client_socket, usrname, pswd, eml, na1, ag, gend, stat, ci, ins)
+    if(flg==0):
+        txt("Some error in giving data")
+    else:
+        txt("Go to login")
 
 
 
@@ -93,10 +523,11 @@ def register(frame):
 
     Label(frame,pady=5,text="Please Enter your details",width="300",height=2,font=("Calibri",15)).pack()
     username = StringVar()
-    username.trace("w", lambda name, index, mode, username=username: callback(username,20))    
+    username.trace("w", lambda name, index, mode, username=username: callback(username,20))   
 
-    password = StringVar()
-    password = password.trace("w", lambda name, index, mode, password=password: callback(password,20))
+    email1 = StringVar()
+    email1.trace("w", lambda name, index, mode, email1=email1: callback(email1,30))
+     
     
     name1 = StringVar()
     name1.trace("w", lambda name, index, mode, name1 =name1: callback(name1,20))
@@ -125,9 +556,6 @@ def register(frame):
     username_entry.pack()
     # Label(frame,text="").pack()
 
-    Label(frame,text="Password").pack()
-    password_entry = Entry(frame,textvariable=password,show="*")
-    password_entry.pack()
     # Label(frame,text="").pack()
 
     Label(frame,text="Name").pack()
@@ -141,6 +569,9 @@ def register(frame):
     email_entry.pack()
     # Label(frame,text="").pack()
 
+    Label(frame,text="pswd").pack()
+    email1_entry = Entry(frame,textvariable=email1,show="*")
+    email1_entry.pack()
 
 
 
@@ -154,7 +585,9 @@ def register(frame):
     status_entry = Entry(frame,textvariable=status)
     status_entry.pack()
     # Label(frame,text="").pack()
-
+    Label(frame,text="age").pack()
+    age_entry = Entry(frame,textvariable=age)
+    age_entry.pack()
 
     Label(frame,text="city").pack()
     city_entry = Entry(frame,textvariable=city)
@@ -163,15 +596,42 @@ def register(frame):
     Label(frame,text="institute").pack()
     institute_entry = Entry(frame,textvariable=institute)
     institute_entry.pack()    
-    
-   
-    Button(frame,text="Register",width=10,height=1,).pack()
+    # usrname = username.get().strip()
+    # # pswd = password.get().strip()
+    # eml = email.get().strip()
+    # na1 = name1.get().strip()
+    # ag = age.get()
+    # gend =gender.get().strip()
+    # stat = status.get().strip()
+    # ci = city.get().strip()
+    # ins = institute.get().strip()
+
+    # print(usrname, password.strip(), eml, na1, ag, gend, stat, ci, ins)
+
+    print(type(email1))
+    print(type(email))
+
+    makeregister = partial(rregister,client_socket,username, email1, email, name1, age, gender, status, city, institute)
+    Button(frame,text="Register",width=10,height=1,command=makeregister).pack()
     # Label(frame,text="").pack()
 
-    mm = partial(txt,frame,username)
+    mm = partial(main1,frame)
     Button(frame,text="Go to login",width=10,height=1,command=mm).pack() 
     
     frame.pack(expand="yes")  
+
+
+def logverify(username,password):
+    usrname = username.get().strip()
+    pswd = password.get().strip()
+    print(usrname)
+    print(pswd)
+    print("in log verify clalled for Login")
+    flg = Login(client_socket,usrname,pswd)
+    if(flg!=0):
+        Actionspage(usrname,flg)
+    else:
+        txt("Your details are invalid")
 
 
 
@@ -191,22 +651,29 @@ def lloginpage(frame):
 
     frame = LabelFrame(screen,text="")
     Label(frame,pady=25,text="Please Enter your details",width="300",height=2,font=("Calibri",15)).pack()
+    
+    
     username = StringVar()
-    password = StringVar()
     Label(frame,text="Username").pack()
     username_entry = Entry(frame,textvariable=username)
     username_entry.pack()
+    
+    
     Label(frame,text="Password").pack()
+    
+    password = StringVar()
     password_entry = Entry(frame,textvariable=password,show="*")
     password_entry.pack()
     Label(frame,text="").pack()
-    Button(frame,text="Login",width=10,height=1,command=screen.destroy).pack()
+
+
+    kk = partial(logverify,username,password)
+    Button(frame,text="Login",width=10,height=2,command=kk).pack()
     Label(frame,text="").pack()
 
     mm = partial(main1,frame)
-    Button(frame,text="goback",width=10,height=1,command=mm).pack()  
+    Button(frame,text="goback",width=10,height=2,command=mm).pack()  
     frame.pack()  
-
 
 
 
@@ -245,12 +712,6 @@ def main1(frame):
     frame.pack()
 
 
-    
-    
-
-def with_args(a,b):
-    print("a+b:",a+b)
-
 
 def main():
     global screen
@@ -275,8 +736,9 @@ def main():
     
     # Button(frame, text="With Args",height="2",width="30",command=fwith_args).pack()
     # Label(frame, text="").pack()
-    # Button(frame,text="Actionpage",height=2,width=30,command=Actionspage).pack()
-    # Label(frame, text="").pack()
+    ak = partial(Actionspage,"prasad")
+    Button(frame,text="Actionpage",height=2,width=30,command=ak).pack()
+    Label(frame, text="").pack()
 
 
     Button(frame, text="Quit",height="2",width="30",command=screen.destroy).pack()
@@ -286,6 +748,12 @@ def main():
         
     frame.pack()
     screen.mainloop()
+    client_socket.close()
+
+
+
+
+
 
 
 
