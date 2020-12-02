@@ -80,7 +80,7 @@ def clientthread(conn, addr):
 					NewTweet(conn,username, data)
 				elif(query == "DeleteFollower"):
 					print("deleting follower")
-					DeleteFollower(conn,addr,username,data)
+					DeleteFollower(conn,username,data)
 				elif(query == "ShowAllFollowers"):
 					print("In the show followers")
 					ShowAllFollowers(conn,username, data)

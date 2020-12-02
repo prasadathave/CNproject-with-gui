@@ -134,7 +134,7 @@ def Unfollow2(twt,username):
 		print(len(textt))
 		a = Unfollow(client_socket,textt.strip())
 		if(a!=0 and a!=None):
-			txt("Deleted Successfully")
+			txt("Unfollowed Successfully")
 
 		else:
 			txt("some error while searching or not found")
@@ -177,7 +177,59 @@ def Unfollow1(username):
 
 ####################################################################
 
+################### Delete Follower ##############
+def Deleteflwr2(twt,username):
+	textt = twt.get(1.0,END)
+	if(len(textt)==0):
+		txt("Give some text")
+	else:
+		print(len(textt))
+		a = DeleteFollower(client_socket,textt.strip())
+		if(a!=0 and a!=None):
+			txt("Deleted Successfully")
 
+		else:
+			txt("some error while searching or not found")
+
+
+def Deleteflwr1(username):
+	global screen
+	root = screen
+	root.destroy()
+	root = Tk()
+	screen = root
+	root.title("Mini Tweet")
+	root.geometry("950x600")  
+	# refresh1(root)
+	frame1 = Frame(root)
+	frame = Frame(root)
+	l0 =Label(frame,text="Write name here:",font=("Calibri",15))
+	twt = StringVar()
+	twt = Text(frame, height = 10, width = 50)
+
+	# search11 = partial(srcAux,twt)
+	# Button(frame1,text="Search a person",command = search11).pack(side=LEFT)
+	aa1 = partial(Actionspage,username,[])
+	Button(frame1,text="go to main window",command=aa1).pack()
+	frame1.pack(side=TOP)
+
+
+
+	# twt2 = Text(frame,height =2,width = 50)
+  
+	tweet1 = partial(Deleteflwr2,twt,username.strip())
+	b1 = Button(frame,text="Search",command=tweet1)
+	
+	frame.pack()
+	l0.pack()
+	twt.pack()
+	# twt2.pack()
+	b1.pack()
+	root.mainloop()
+
+
+
+###################################################
 
 
 	
@@ -655,6 +707,8 @@ def Actionspage(username,arr):
 	Button(frame2,text="Show All followers",command=sflw).pack(side=LEFT)
 	rfrs = partial(refers2,username)
 	Button(frame2,text="Refresh",command=rfrs).pack(side=LEFT)
+	dflr = partial(Deleteflwr1,username)
+	Button(frame2, text="Unfollow",command=dflr).pack(side=LEFT)
 
 	frame2.pack(side=TOP)
 	
