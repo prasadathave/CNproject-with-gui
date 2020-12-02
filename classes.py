@@ -151,3 +151,10 @@ class retweet:
     def __init__(self,func,id):
         self.func=func
         self.id=id
+class Texting:
+    def __init__(self,func,message):
+        self.func = func
+        self.message = message
+    def sendit(self,conn):
+        data = pickle.dumps(self)
+        conn.send(data)

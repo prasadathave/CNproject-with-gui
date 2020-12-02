@@ -1,3 +1,4 @@
+from dns.resolver import query
 import mysql.connector
 from classes import *
 from globalvars import *
@@ -280,28 +281,67 @@ def broadcast(message, connection, chatroom_clients):
 		if clients!=connection:
 			try: 
 				print(message)
-				clients.send(message.encode('ascii')) 
+				# clients.send(message.encode('ascii')) 
+				Texting("EnterChatRoom",message).sendit(clients)
 			except: 
 				clients.close() 
 				if connection in chatroom_clients: 
 					chatroom_clients.remove(connection)
 
 def EnterChatRoom(conn, addr, data, chatroom_clients, username):
-	conn.send("Welcome to this chatroom!".encode('ascii')) 
+	# conn.send("Welcome to this chatroom!".encode('ascii')) 
+	Texting("EnterChatRoom","Welcome to this chatroom!").sendit(conn)
+
 	while True:
 		# print("inside try")
-		message = conn.recv(2048) #the client in this connection sent a message to be broadcasted
-		while(len(message)==0):
-			message=conn.recv(2048)
-		# print("before if")
-		if len(message):
-			print ("<" + username + "> " + message.decode('ascii')) 
-			message_to_send = "<" + username + "> " + message.decode('ascii')
-			broadcast(message_to_send, conn, chatroom_clients) 
-
-		else: 
-			print("Connection broken")
+		inpt = conn.recv(2048) #the client in this connection sent a message to be broadcasted
+		data = pickle.loads(inpt)
+		if(data.func!="EnterChatRoom"):
 			chatroom_clients.remove(conn)
+			query = data.func
+			if(query=="NewTweet"):
+				NewTweet(conn,username, data)
+			elif(query == "DeleteFollower"):
+				print("deleting follower")
+				DeleteFollower(conn,addr,username,data)
+			elif(query == "ShowAllFollowers"):
+				print("In the show followers")
+				ShowAllFollowers(conn,username, data)
+			elif(query == "SearchPerson"):
+				SearchPerson(conn, addr, username, data)
+			elif(query =="Follow"):
+				Follow(conn, addr, username, data)
+			elif(query == "SearchByHashtag"):
+				SearchByHashtag(conn,data)
+			elif(query == "TrendingHashtags"):
+				TrendingHashtags(conn, data)
+			elif(query == "EnterChatRoom"):
+				chatroom_clients.append(conn)
+				EnterChatRoom(conn, addr, data, chatroom_clients, username)
+			elif(query == "Refresh"):
+				Refresh(conn, username, data)
+			elif(query == "Retweet"):
+				print("Inside retweet")
+				Retweet(conn,data.id,username)
+			break
+		else:
+			message = data.message
+
+			while(len(message)==0):
+				message=conn.recv(2048)
+			# print("before if")
+			if len(message):
+				print ("<" + username + "> " + message) 
+				message_to_send = "<" + username + "> " + message
+				broadcast(message_to_send, conn, chatroom_clients) 
+
+				if(bytes('exit','ascii')==message):
+						chatroom_clients.remove(conn)
+				if(bytes('exit\n','ascii')==message):
+						chatroom_clients.remove(conn)
+			else: 
+				print("Connection broken")
+				chatroom_clients.remove(conn)
 
 
 
