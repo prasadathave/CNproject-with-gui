@@ -142,23 +142,46 @@ def NewTweet(conn,username, msg):
 	conn.send(data)
 	print("Done tweet")
 	
-def DeleteFollower(conn, addr,username, data):
-	follower=data.follower
-	query="DELETE FROM "+str(username) + "_following"+" WHERE Username ='" + str(data.follower) +"'"
+def Unfollow(conn,username, data):
+    
+	#remove the person(to be unfollowed by curr client) from the following of username
+	query="DELETE FROM "+str(username) + "_following"+" WHERE Username ='" + str(data.following) +"'"
 	mycursor=mydb.cursor()
 	mycursor.execute(query)
 	mydb.commit()
 	
-	query="DELETE FROM "+str(data.follower)+"_followers"+" WHERE Username ='" + str(username) +"'"
+	#remove username from the followers of the person
+	query="DELETE FROM "+str(data.following)+"_followers"+" WHERE Username ='" + str(username) +"'"
 	mycursor=mydb.cursor()
 	mycursor.execute(query)
 	mydb.commit()
 
-	#Tell client that follower was succesfully deleted
+	#Tell client that the person was succesfully unfollowed
+	reply=unfollow("","",1)
+	data=pickle.dumps(reply)
+	conn.send(data)
+	# print("Unfollowed ",data.following)
+
+
+def DeleteFollower(conn,username, data):
+    
+	#remove the person(follower to be deleted by curr client) from the followers of username
+	query="DELETE FROM "+str(username) + "_followers"+" WHERE Username ='" + str(data.follower) +"'"
+	mycursor=mydb.cursor()
+	mycursor.execute(query)
+	mydb.commit()
+	
+	#remove username from the person's following
+	query="DELETE FROM "+str(data.follower)+"_following"+" WHERE Username ='" + str(username) +"'"
+	mycursor=mydb.cursor()
+	mycursor.execute(query)
+	mydb.commit()
+
+	#Tell client that the person was succesfully unfollowed
 	reply=deletefollower("","",1)
 	data=pickle.dumps(reply)
 	conn.send(data)
-	print("Deleted follower")
+	# print("Deleted ",data.follower)
 
 def ShowAllFollowers(conn, username, data):
 	print("searching for :",username.strip())
@@ -282,7 +305,7 @@ def broadcast(message, connection, chatroom_clients):
 			try: 
 				print(message)
 				# clients.send(message.encode('ascii')) 
-				Texting("EnterChatRoom",message).sendit(clients)
+				Texting("ChatRoom",message).sendit(clients)
 			except: 
 				clients.close() 
 				if connection in chatroom_clients: 
@@ -290,13 +313,13 @@ def broadcast(message, connection, chatroom_clients):
 
 def EnterChatRoom(conn, addr, data, chatroom_clients, username):
 	# conn.send("Welcome to this chatroom!".encode('ascii')) 
-	Texting("EnterChatRoom","Welcome to this chatroom!").sendit(conn)
+	Texting("ChatRoom","Welcome to this chatroom!").sendit(conn)
 
 	while True:
 		# print("inside try")
 		inpt = conn.recv(2048) #the client in this connection sent a message to be broadcasted
 		data = pickle.loads(inpt)
-		if(data.func!="EnterChatRoom"):
+		if(data.func!="ChatRoom"):
 			chatroom_clients.remove(conn)
 			query = data.func
 			if(query=="NewTweet"):

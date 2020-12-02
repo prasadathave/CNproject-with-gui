@@ -12,6 +12,7 @@ global cntr
 cntr =1.0
 client_socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
 target_ip = "127.0.1.1"
+print("Enter the port address:")
 target_port = input()
 client_socket.connect((target_ip,int(target_port)))
 print("Connected with server")
@@ -55,16 +56,20 @@ def maketweetscreen(username):
 
 
 	frame = Frame(root)
+	
+	l0 =Label(frame,text="Write tweet here:",font=("Calibri",15))
 	twt = StringVar()
 	twt = Text(frame, height = 10, width = 50)
-
 	twt2 = Text(frame,height =2,width = 50)
   
+	l1 = Label(frame,text="Put at max 5 space separated hashtag below:",font=("Calibri",15))
 	tweet1 = partial(maketwt,twt,twt2,username)
 	b1 = Button(frame,text="Tweet",command=tweet1)
 	
 	frame.pack()
+	l0.pack()
 	twt.pack()
+	l1.pack()
 	twt2.pack()
 	b1.pack()
 	root.mainloop()
@@ -127,7 +132,7 @@ def Unfollow2(twt,username):
 		txt("Give some text")
 	else:
 		print(len(textt))
-		a = DeleteFollower(client_socket,textt.strip())
+		a = Unfollow(client_socket,textt.strip())
 		if(a!=0 and a!=None):
 			txt("Deleted Successfully")
 
@@ -146,6 +151,7 @@ def Unfollow1(username):
 	# refresh1(root)
 	frame1 = Frame(root)
 	frame = Frame(root)
+	l0 =Label(frame,text="Write name here:",font=("Calibri",15))
 	twt = StringVar()
 	twt = Text(frame, height = 10, width = 50)
 
@@ -163,6 +169,7 @@ def Unfollow1(username):
 	b1 = Button(frame,text="Search",command=tweet1)
 	
 	frame.pack()
+	l0.pack()
 	twt.pack()
 	# twt2.pack()
 	b1.pack()
@@ -209,6 +216,7 @@ def searchbyhst1(username):
 	# refresh1(root)
 	frame1 = Frame(root)
 	frame = Frame(root)
+	l0 =Label(frame,text="Write hashtag here:",font=("Calibri",15))
 	twt = StringVar()
 	twt = Text(frame, height = 10, width = 50)
 
@@ -226,6 +234,7 @@ def searchbyhst1(username):
 	b1 = Button(frame,text="Search",command=tweet1)
 	
 	frame.pack()
+	l0.pack()
 	twt.pack()
 	# twt2.pack()
 	b1.pack()
@@ -263,6 +272,7 @@ def follow1(username):
 	# refresh1(root)
 	frame1 = Frame(root)
 	frame = Frame(root)
+	l0 =Label(frame,text="Write name here:",font=("Calibri",15))
 	twt = StringVar()
 	twt = Text(frame, height = 10, width = 50)
 
@@ -280,6 +290,7 @@ def follow1(username):
 	b1 = Button(frame,text="Follow",command=tweet1)
 	
 	frame.pack()
+	l0.pack()
 	twt.pack()
 	# twt2.pack()
 	b1.pack()
@@ -319,6 +330,7 @@ def Trendhst2(username):
 	# refresh1(root)
 	frame1 = Frame(root)
 	frame = Frame(root)
+	l0 =Label(frame,text="Write tweet here:",font=("Calibri",15))
 	twt = StringVar()
 	twt = Text(frame, height = 10, width = 50)
 
@@ -496,6 +508,7 @@ def rtwt2(username):
 	
 	frame1.pack(side=TOP)
 	frame = Frame(root)
+	l0 =Label(frame,text="Write tweet id which you want to retweet here:",font=("Calibri",15))
 	twt = StringVar()
 	twt = Text(frame, height = 10, width = 50)
 	# twt2 = Text(frame,height =2,width = 50)
@@ -503,6 +516,7 @@ def rtwt2(username):
 	b1 = Button(frame,text="Tweet",command=tweet1)
 	
 	frame.pack()
+	l0.pack()
 	twt.pack()
 	# twt2.pack()
 	b1.pack()
@@ -519,7 +533,7 @@ def send1(myls,txtt):
 	txtt.set("")
 	myls.insert(END,"<You>:"+data1)
 	# client_socket.send(bytes(data1,"ascii"))
-	Texting("EnterChatRoom",data1).sendit(client_socket)
+	Texting("ChatRoom",data1).sendit(client_socket)
 
 	if data1=="exit":
 		client_socket.close()
@@ -531,6 +545,8 @@ def receive(myls):
 			while(len(data1)==0):
 				data1 = client_socket.recv(BUFFERSIZE)
 			val1 = pickle.loads(data1)
+			if(val1.func!="ChatRoom"):
+				break
 			msg1 = val1.message
 			myls.insert(END, msg1)     
 		except OSError:
@@ -538,7 +554,7 @@ def receive(myls):
 
 def Exitchat(client_socket,username):
 	# client_socket.send(bytes("exit",'ascii'))
-	Texting("EnterChatRoom","exit").sendit(client_socket)
+	Texting("ChatRoom","exit").sendit(client_socket)
 	Actionspage(username,[])
 
 
@@ -667,10 +683,6 @@ def Actionspage(username,arr):
 
 
 
-
-
-def main2():
-	pass
 
 
 def txt(name):

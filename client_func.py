@@ -62,6 +62,20 @@ def NewTweet(client_socket,tweet_msg,hashtags,username):
         print("Tweeted")
     return data.flag
 
+def Unfollow(client_socket ,following):
+    #client to server
+    msg=unfollow("Unfollow",following,0)
+    data=pickle.dumps(msg)
+    client_socket.send(data)
+    
+    #server's reply
+    reply=client_socket.recv(BUFFERSIZE)
+    # while(len(reply)==0):
+    #     reply=client_socket.recv(BUFFERSIZE) 
+    data=pickle.loads(reply)
+    if(data.flag==1):
+        print(following, "unfollowed")
+    return data.flag
 
 def DeleteFollower(client_socket ,follower):
     #client to server
@@ -69,14 +83,15 @@ def DeleteFollower(client_socket ,follower):
     data=pickle.dumps(msg)
     client_socket.send(data)
     
-    #server to client
+    #server's reply
     reply=client_socket.recv(BUFFERSIZE)
-    while(len(reply)==0):
-        reply=client_socket.recv(BUFFERSIZE) 
+    # while(len(reply)==0):
+    #     reply=client_socket.recv(BUFFERSIZE) 
     data=pickle.loads(reply)
     if(data.flag==1):
-        print("Follower", follower, "unfollowed")#syntax check
+        print(follower, "deleted")
     return data.flag
+
 
 def ShowAllFollowers(client_socket):
     arr=list()

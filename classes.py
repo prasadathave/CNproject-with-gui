@@ -55,6 +55,20 @@ class newtweet():
         return b
 
 
+class unfollow():
+    def __init__(self,func,following,flag):
+        self.func=func
+        self.following=following
+        self.flag=flag
+    def send(self,conn):
+        a = pickle.dumps(self)
+        conn.send(a)
+    def receive(self,conn):
+        data = conn.recv(BUFFERSIZE)
+        b = pickle.loads(data)
+        return b
+
+
 class deletefollower():
     def __init__(self,func,follower,flag):
         self.func=func
