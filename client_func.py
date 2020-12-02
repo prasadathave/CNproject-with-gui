@@ -108,7 +108,7 @@ def ShowAllFollowers(client_socket):
     print("Got the value")
     if len(names)==0:
         print("No followers")
-        # return 0
+        return 0
     else:
         arr = []
         for name in names:
